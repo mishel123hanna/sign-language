@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     # TERMS_OF_SERVICE: str = "https://example.com/tos"
 
     ENVIRONMENT: str = "deployment"
-    # Database Settings 
+    # Database Settings
     # DATABASE_URL: str
     SUPABASE_URL: str
     SUPABASE_USER: str
@@ -27,6 +27,7 @@ class Settings(BaseSettings):
     REDIS_URL: str = "redis://localhost:6379/0"
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
+    REDIS_PASSWORD: str
     DB_ECHO_LOG: bool = False
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
