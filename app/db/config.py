@@ -12,17 +12,20 @@ from app.core.settings import settings
 
 # Create async engine with connection pooling
 async_engine = create_async_engine(
-    # url=settings.DATABASE_URL,
     url=f"postgresql+asyncpg://{settings.SUPABASE_USER}:{settings.SUPABASE_PASSWORD}@"
         f"{settings.SUPABASE_HOST}:{settings.SUPABASE_PORT}/{settings.SUPABASE_DB_NAME}",
     echo=True,
     pool_pre_ping=True,  # Checks connection health
-    pool_size=20,
-    max_overflow=10,
-    # connect_args={
-    #     "ssl": "require",  # Supabase requires SSL
-    #     "statement_cache_size": 0  # Disable prepared statement cache
-    # }
+    # Reduced pool size since Supabase/PgBouncer handles connection pooling
+    pool_size=5,
+    max_overflow=5,
+    connect_args={
+        "ssl": "require",
+        "statement_cache_size": 0,  # CRITICAL: Disable prepared statement cache for PgBouncer
+        "server_settings": {
+            "application_name": "sign_language_app",
+        }
+    }
 )
     
 

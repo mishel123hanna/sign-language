@@ -22,7 +22,8 @@ if config.config_file_name is not None:
 
 # Set the SQLAlchemy URL from your settings
 # config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
-config.set_main_option("sqlalchemy.url", settings.SUPABASE_URL)
+config.set_main_option("sqlalchemy.url", f"postgresql+asyncpg://{settings.SUPABASE_USER}:{settings.SUPABASE_PASSWORD}@"
+        f"{settings.SUPABASE_HOST}:{settings.SUPABASE_PORT}/{settings.SUPABASE_DB_NAME}")
 
 # add your model's MetaData object here
 # for 'autogenerate' support
@@ -85,7 +86,9 @@ def run_migrations_offline() -> None:
 
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
-    connectable = create_async_engine(settings.DATABASE_URL)
+    # connectable = create_async_engine(settings.DATABASE_URL)
+    connectable = create_async_engine(f"postgresql+asyncpg://{settings.SUPABASE_USER}:{settings.SUPABASE_PASSWORD}@"
+        f"{settings.SUPABASE_HOST}:{settings.SUPABASE_PORT}/{settings.SUPABASE_DB_NAME}")
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
