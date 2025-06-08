@@ -15,8 +15,9 @@ class Settings(BaseSettings):
     CONTACT_EMAIL: str = "mishelhanna3@gmail.com"
     # TERMS_OF_SERVICE: str = "https://example.com/tos"
 
+    ENVIRONMENT: str = "deployment"
     # Database Settings 
-    DATABASE_URL: str
+    # DATABASE_URL: str
     SUPABASE_URL: str
     SUPABASE_USER: str
     SUPABASE_PASSWORD: str
