@@ -1,0 +1,33 @@
+# render.yaml
+services:
+  - type: web
+    name: sign-language-api
+    env: python
+    runtime: python3.11
+    plan: free  # or 'starter' if you want better performance
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port 10000
+    envVars:
+      - key: ENV
+        value: production
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      # Add any other secrets or API keys here
+      # - key: YOUR_API_KEY
+      #   value: your_api_value
+
+    autoDeploy: true
+    healthCheckPath: /health
+    region: frankfurt 
+
+# workers:
+#   - type: worker
+#     name: sign-language-worker
+#     env: python
+#     runtime: python3.11
+#     buildCommand: pip install -r requirements.txt
+#     startCommand: python app/worker.py
+#     plan: free
+#     envVars:
+#       - key: ENV
+#         value: production
