@@ -12,9 +12,9 @@ from app.core.settings import settings
 
 # Create async engine with connection pooling
 async_engine = create_async_engine(
-    url=settings.DATABASE_URL,
-    # url=f"postgresql+asyncpg://{settings.SUPABASE_USER}:{settings.SUPABASE_PASSWORD}@"
-    #     f"{settings.SUPABASE_HOST}:{settings.SUPABASE_PORT}/{settings.SUPABASE_DB_NAME}",
+    # url=settings.DATABASE_URL,
+    url=f"postgresql+asyncpg://{settings.SUPABASE_USER}:{settings.SUPABASE_PASSWORD}@"
+        f"{settings.SUPABASE_HOST}:{settings.SUPABASE_PORT}/{settings.SUPABASE_DB_NAME}",
     echo=True,
     pool_pre_ping=True,  # Checks connection health
     pool_size=20,
