@@ -1,10 +1,9 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
 
+from app.auth.routes import auth_router
 from app.core.settings import settings
 from app.db.config import init_db
-from app.auth.routes import auth_router
 from app.sign_to_text.routes import sign_to_text_router
 from app.text_to_sign.routes import text_to_sign_router
 
@@ -49,16 +48,19 @@ app.include_router(
     auth_router, prefix=settings.API_PREFIX + "/auth", tags=["Authentication"]
 )
 app.include_router(
-    sign_to_text_router, prefix=settings.API_PREFIX,
-     include_in_schema=True, tags=["Translate Sign to Text via Websocket"]
+    sign_to_text_router,
+    prefix=settings.API_PREFIX,
+    include_in_schema=True,
+    tags=["Translate Sign to Text via Websocket"],
 )
 app.include_router(
-    text_to_sign_router, prefix=settings.API_PREFIX, tags=["المخاطبة"]
+    text_to_sign_router,
+    prefix=settings.API_PREFIX,
+    tags=["Text to Sign"],
 )
 
+
 # Health check endpoint
-@app.get("/health", include_in_schema=False)
-async def health_check():
-    return JSONResponse(content={"status": "ok"})
-
-
+# @app.get("/health", include_in_schema=False)
+# async def health_check():
+#     return JSONResponse(content={"status": "ok"})

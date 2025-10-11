@@ -1127,7 +1127,6 @@ generation_semaphore = asyncio.Semaphore(Config.MAX_CONCURRENT_GENERATIONS)
 
 text_to_sign_router = APIRouter(
     prefix="/text-to-sign",
-    tags=["Text to Sign"],
     responses={
         500: {"description": "Internal server error"},
         422: {"description": "Validation error"},
