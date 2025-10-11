@@ -9,4 +9,4 @@ services:
       - key: ENV
         value: production
     autoDeploy: true
-    healthCheckPath: /health
+    # healthCheckPath: /health
