@@ -1,6 +1,6 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from typing import List
-from pathlib import Path
+
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
@@ -18,6 +18,8 @@ class Settings(BaseSettings):
     ENVIRONMENT: str = "deployment"
     # Database Settings
     # DATABASE_URL: str
+    SUPABASE_PROJECT_URL: str
+    SUPABASE_API_KEY: str
     SUPABASE_URL: str
     SUPABASE_USER: str
     SUPABASE_PASSWORD: str

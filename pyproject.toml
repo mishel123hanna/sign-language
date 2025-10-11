@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
+    "aiofiles>=24.1.0",
     "aioredis==2.0.1",
     "alembic==1.15.2",
     "annotated-types==0.7.0",
@@ -48,6 +49,8 @@ dependencies = [
     "sqlalchemy==2.0.40",
     "sqlmodel==0.0.24",
     "starlette==0.46.2",
+    "supabase>=2.13.0",
+    "tenacity>=9.1.2",
     "typer==0.15.3",
     "typing-extensions==4.13.2",
     "typing-inspection==0.4.0",

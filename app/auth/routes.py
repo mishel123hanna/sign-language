@@ -146,23 +146,25 @@
 
 
 # optimized with cloud
-from datetime import timedelta, timezone, datetime
-from fastapi import APIRouter, Depends, status, Path, Form, HTTPException
-from .schemas import UserCreateModel, UserModel, UserLoginModel
-from .services import UserService
-from sqlmodel.ext.asyncio.session import AsyncSession
-from app.db.config import get_session
-from .utils import verify_password, create_access_token
-from fastapi.responses import JSONResponse
-from app.core.settings import settings
-from .dependencies import RefreshTokenBearer, AccessTokenBearer
-from app.db.redis import add_jti_to_blocklist
-from app.db.models import User
-from sqlmodel import select, or_
-from sqlalchemy.exc import IntegrityError
-import asyncio
 import logging
-from typing import Dict, Any, Annotated
+from datetime import datetime, timedelta, timezone
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, Form, HTTPException, status
+from fastapi.responses import JSONResponse
+from sqlalchemy.exc import IntegrityError
+from sqlmodel import select
+from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.core.settings import settings
+from app.db.config import get_session
+from app.db.models import User
+from app.db.redis import add_jti_to_blocklist
+
+from .dependencies import AccessTokenBearer, RefreshTokenBearer
+from .schemas import UserCreateModel, UserLoginModel, UserModel
+from .services import UserService
+from .utils import create_access_token, verify_password
 
 logger = logging.getLogger(__name__)
 
@@ -181,7 +183,6 @@ async def create_user_account(
     user_data: Annotated[UserCreateModel, Form()],
     session: AsyncSession = Depends(get_session),
 ) -> UserModel:
-
     # Input sanitization
     username = user_data.username.strip().lower()
     email = user_data.email.strip().lower()
@@ -200,7 +201,9 @@ async def create_user_account(
         #         status_code=status.HTTP_400_BAD_REQUEST,
         #         detail="A user with this username already exists.",
         #     )
-        user_data = UserCreateModel(username=username, email=email, password=user_data.password)
+        user_data = UserCreateModel(
+            username=username, email=email, password=user_data.password
+        )
 
         # Create new user
         new_user = await user_service.create_user(user_data, session)
@@ -244,7 +247,8 @@ async def create_user_account(
     description="Authenticate user and return access/refresh tokens",
 )
 async def login(
-    login_data: Annotated[UserLoginModel, Form()], session: AsyncSession = Depends(get_session)
+    login_data: Annotated[UserLoginModel, Form()],
+    session: AsyncSession = Depends(get_session),
 ) -> JSONResponse:
     """
     Authenticate user and return JWT tokens with improved error handling.
