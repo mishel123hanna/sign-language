@@ -1,13 +1,15 @@
 from typing import Optional
-from app.db.models import User
+
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
+
+from app.db.models import User
+
 from .schemas import UserCreateModel
 from .utils import generate_hash_password
 
 
 class UserService:
-
     async def get_user_by_email(
         self, email: str, session: AsyncSession
     ) -> Optional[User]:
@@ -38,4 +40,3 @@ class UserService:
         await session.commit()
         await session.refresh(new_user)
         return new_user
-

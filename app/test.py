@@ -1,6 +1,6 @@
-import jwt
 import base64
-import json
+
+import jwt
 
 # # Your tokens
 # original = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImVtYWlsIjoidGVzdEBnbWFpbC5jb20iLCJ1c2VyX2lkIjo2fSwiZXhwIjoxNzQ4NjA1NTg2LCJqdGkiOiI2MDU0ZWIwZi00ZGQwLTQ4ZmYtOGNlZC01ZWI1OTZmZWMzOGMiLCJyZWZyZXNoIjpmYWxzZX0.A_vScVzzXDGiPOJIQ2zMQm-r4uv2Zvowy_ZV_AV67Pc"
@@ -56,10 +56,10 @@ import json
 #         parts = token.split('.')
 #         if len(parts) != 3:
 #             return False, "Invalid JWT format"
-        
+
 #         header_payload = f"{parts[0]}.{parts[1]}"
 #         signature = parts[2]
-        
+
 #         # Calculate expected signature
 #         expected_signature = base64.urlsafe_b64encode(
 #             hmac.new(
@@ -68,7 +68,7 @@ import json
 #                 hashlib.sha256
 #             ).digest()
 #         ).decode().rstrip('=')
-        
+
 #         # Compare signatures
 #         is_valid = hmac.compare_digest(signature, expected_signature)
 #         return is_valid, f"Expected: {expected_signature}, Got: {signature}"
@@ -117,8 +117,6 @@ import json
 # else:
 #     print("❓ Unexpected result - needs investigation")
 # print("=" * 60)
-
-
 
 
 """
@@ -170,8 +168,8 @@ Deep test for pyjwt library
 # print("\n2. Explicit signature verification enabled:")
 # try:
 #     result3 = jwt.decode(
-#         original, 
-#         SECRET_KEY, 
+#         original,
+#         SECRET_KEY,
 #         algorithms=["HS256"],
 #         options={"verify_signature": True}
 #     )
@@ -181,8 +179,8 @@ Deep test for pyjwt library
 
 # try:
 #     result4 = jwt.decode(
-#         modified, 
-#         SECRET_KEY, 
+#         modified,
+#         SECRET_KEY,
 #         algorithms=["HS256"],
 #         options={"verify_signature": True}
 #     )
@@ -197,32 +195,32 @@ Deep test for pyjwt library
 # try:
 #     from jwt.api_jwt import PyJWT
 #     jwt_instance = PyJWT()
-    
+
 #     # Check default options
 #     print(f"Default options: {getattr(jwt_instance, 'options', 'Not found')}")
-    
+
 #     # Try to see what's happening internally
 #     print("Attempting to trace PyJWT internal calls...")
-    
+
 #     # Monkey patch to see what's happening
 #     original_decode = jwt_instance.decode
-    
+
 #     def debug_decode(*args, **kwargs):
 #         print(f"PyJWT.decode called with args: {args}")
 #         print(f"PyJWT.decode called with kwargs: {kwargs}")
 #         result = original_decode(*args, **kwargs)
 #         print(f"PyJWT.decode returning: {type(result)}")
 #         return result
-    
+
 #     jwt_instance.decode = debug_decode
 #     jwt.decode = jwt_instance.decode
-    
+
 #     print("\n--- Tracing original token decode ---")
 #     jwt.decode(original, SECRET_KEY, algorithms=["HS256"])
-    
+
 #     print("\n--- Tracing modified token decode ---")
 #     jwt.decode(modified, SECRET_KEY, algorithms=["HS256"])
-    
+
 # except Exception as e:
 #     print(f"Internal inspection failed: {e}")
 
@@ -249,14 +247,14 @@ Deep test for pyjwt library
 # try:
 #     import importlib
 #     import pkgutil
-    
+
 #     jwt_packages = []
 #     for finder, name, ispkg in pkgutil.iter_modules():
 #         if 'jwt' in name.lower():
 #             jwt_packages.append(name)
-    
+
 #     print(f"JWT-related packages found: {jwt_packages}")
-    
+
 #     # Check if there's another jwt module
 #     try:
 #         import jwt as jwt1
@@ -269,7 +267,7 @@ Deep test for pyjwt library
 #             print("Only 'jwt' module found")
 #     except ImportError:
 #         print("No jwt module found (weird)")
-        
+
 # except Exception as e:
 #     print(f"Library check failed: {e}")
 
@@ -291,132 +289,134 @@ Similar-looking characters that decode to the same bytes
 Edge cases in the specific signature
 """
 
-import jwt
-import base64
 import string
 
 # Your tokens
 original = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyIjp7ImVtYWlsIjoidGVzdEBnbWFpbC5jb20iLCJ1c2VyX2lkIjo2fSwiZXhwIjoxNzQ4NjA1NTg2LCJqdGkiOiI2MDU0ZWIwZi00ZGQwLTQ4ZmYtOGNlZC01ZWI1OTZmZWMzOGMiLCJyZWZyZXNoIjpmYWxzZX0.A_vScVzzXDGiPOJIQ2zMQm-r4uv2Zvowy_ZV_AV67Pc"
 SECRET_KEY = "e-Kvkme6tHg9mbbdIXm8KEYoei1-SFhqX7MszOM3GQk"
 
-print("="*60)
+print("=" * 60)
 print("JWT COINCIDENCE ANALYSIS")
-print("="*60)
+print("=" * 60)
 
 # Extract signature part
-signature = original.split('.')[-1]
+signature = original.split(".")[-1]
 print(f"Original signature: {signature}")
 print(f"Length: {len(signature)}")
 
 # Test what happens when we decode the signature to bytes
 try:
-    orig_bytes = base64.urlsafe_b64decode(signature + '==')
+    orig_bytes = base64.urlsafe_b64decode(signature + "==")
     print(f"Original signature as bytes: {orig_bytes.hex()}")
 except Exception as e:
     print(f"Error decoding original: {e}")
 
 # Test the specific change you made (c -> e)
-modified_signature = signature[:-1] + 'e'
+modified_signature = signature[:-1] + "e"
 print(f"\nModified signature: {modified_signature}")
 
 try:
-    mod_bytes = base64.urlsafe_b64decode(modified_signature + '==')
+    mod_bytes = base64.urlsafe_b64decode(modified_signature + "==")
     print(f"Modified signature as bytes: {mod_bytes.hex()}")
     print(f"Bytes are identical: {orig_bytes == mod_bytes}")
 except Exception as e:
     print(f"Error decoding modified: {e}")
 
 # Comprehensive test: try changing EVERY character in the signature
-print(f"\n{'='*60}")
+print(f"\n{'=' * 60}")
 print("SYSTEMATIC SIGNATURE TAMPERING TEST")
-print("="*60)
+print("=" * 60)
 
 base_token = original[:-1]  # Token without last character
 valid_changes = []
 total_tests = 0
 
 # Test all possible characters for the last position
-test_chars = string.ascii_letters + string.digits + '-_='
+test_chars = string.ascii_letters + string.digits + "-_="
 print(f"Testing {len(test_chars)} different characters for last position...")
 
 for char in test_chars:
     test_token = base_token + char
     total_tests += 1
-    
+
     try:
         payload = jwt.decode(test_token, SECRET_KEY, algorithms=["HS256"])
         valid_changes.append(char)
-        if char != 'c':  # Original was 'c'
+        if char != "c":  # Original was 'c'
             print(f"🚨 FOUND ANOTHER VALID CHARACTER: '{char}'")
     except:
         pass  # Expected - invalid signature
 
-print(f"\nRESULTS:")
+print("\nRESULTS:")
 print(f"Total characters tested: {total_tests}")
 print(f"Valid characters found: {len(valid_changes)}")
 print(f"Valid characters: {valid_changes}")
 
 if len(valid_changes) > 1:
-    print(f"\n🎯 COINCIDENCE CONFIRMED!")
-    print(f"Your signature happens to be valid with {len(valid_changes)} different characters")
-    print(f"This is due to Base64URL encoding quirks, not a security vulnerability")
+    print("\n🎯 COINCIDENCE CONFIRMED!")
+    print(
+        f"Your signature happens to be valid with {len(valid_changes)} different characters"
+    )
+    print("This is due to Base64URL encoding quirks, not a security vulnerability")
 else:
-    print(f"\n❓ Only original character works - this might not be coincidence")
+    print("\n❓ Only original character works - this might not be coincidence")
 
 # Let's also test a few other positions
-print(f"\n{'='*40}")
+print(f"\n{'=' * 40}")
 print("TESTING OTHER POSITIONS")
-print("="*40)
+print("=" * 40)
 
 # Test changing character at different positions
 test_positions = [-2, -3, -4, -5]  # Test last few characters
 for pos in test_positions:
     if abs(pos) <= len(signature):
         print(f"\nTesting position {pos} (character '{signature[pos]}'):")
-        base = signature[:pos] + 'X' + signature[pos+1:]
-        test_token = original.split('.')[0] + '.' + original.split('.')[1] + '.' + base
-        
+        base = signature[:pos] + "X" + signature[pos + 1 :]
+        test_token = original.split(".")[0] + "." + original.split(".")[1] + "." + base
+
         try:
             jwt.decode(test_token, SECRET_KEY, algorithms=["HS256"])
             print(f"✅ Position {pos}: Changing '{signature[pos]}' to 'X' still works!")
         except:
-            print(f"❌ Position {pos}: Changing '{signature[pos]}' to 'X' breaks signature (expected)")
+            print(
+                f"❌ Position {pos}: Changing '{signature[pos]}' to 'X' breaks signature (expected)"
+            )
 
 # Test with your new token to confirm it works properly
-print(f"\n{'='*60}")
+print(f"\n{'=' * 60}")
 print("TESTING YOUR NEW TOKEN")
-print("="*60)
+print("=" * 60)
 print("Please paste your new access token here and we'll test if signature validation")
 print("works properly with character modifications...")
 
 # Base64URL decode explanation
-print(f"\n{'='*60}")
+print(f"\n{'=' * 60}")
 print("BASE64URL ENCODING EXPLANATION")
-print("="*60)
+print("=" * 60)
 print("Base64URL uses: A-Z, a-z, 0-9, -, _")
 print("Some character changes might not affect the decoded bytes due to:")
 print("1. Base64 padding rules")
-print("2. Character encoding boundaries") 
+print("2. Character encoding boundaries")
 print("3. Specific bit patterns in your signature")
 print("\nThis is why 'c' and 'e' might decode to the same binary value!")
 
 # Let's verify this theory
-print(f"\nBASE64URL DECODING TEST:")
+print("\nBASE64URL DECODING TEST:")
 try:
     # Add padding and decode both
-    orig_padded = signature + '=='
-    mod_padded = modified_signature + '=='
-    
+    orig_padded = signature + "=="
+    mod_padded = modified_signature + "=="
+
     orig_decoded = base64.urlsafe_b64decode(orig_padded)
     mod_decoded = base64.urlsafe_b64decode(mod_padded)
-    
+
     print(f"Original decoded: {orig_decoded.hex()}")
     print(f"Modified decoded: {mod_decoded.hex()}")
     print(f"Identical after decoding: {orig_decoded == mod_decoded}")
-    
+
     if orig_decoded == mod_decoded:
         print("🎯 CONFIRMED: 'c' and 'e' decode to identical bytes!")
         print("This explains why both tokens are valid - it's not a security bug!")
-    
+
 except Exception as e:
     print(f"Decoding test failed: {e}")

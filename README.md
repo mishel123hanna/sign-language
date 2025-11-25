@@ -77,6 +77,7 @@ This application provides bidirectional translation between text and sign langua
 - Python 3.8+
 - Supabase account and project
 - AI model credentials (when implementing full model)
+- Redis is not required; JWT revocation now uses an in-memory blocklist (cleared on app restarts)
 
 ## 🚀 Installation
 

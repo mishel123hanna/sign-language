@@ -1,16 +1,16 @@
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends, status
-from ai_models.sign_to_text.tranlate_sign_language import process_frame_with_ai
-from fastapi.responses import HTMLResponse
-from app.core.websocket import manager
 import asyncio
 import logging
-import json
 from typing import Dict
+
+from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect, status
+from fastapi.responses import HTMLResponse
 from sqlmodel import Session
-from app.db.config import get_session, async_engine
-from app.db.models import User, TranslationHistory
 from sqlmodel.ext.asyncio.session import AsyncSession
-from app.auth.dependencies import AccessTokenBearer
+
+from ai_models.sign_to_text.tranlate_sign_language import process_frame_with_ai
+from app.db.config import async_engine, get_session
+from app.db.models import TranslationHistory, User
+
 from .websocket_auth import websocket_token_auth
 
 logging.basicConfig(level=logging.INFO)
@@ -18,82 +18,22 @@ logger = logging.getLogger(__name__)
 
 sign_to_text_router = APIRouter()
 
-
-# @sign_to_text_router.websocket(
-#     "/ws/translate/{user_id}",
-# )
-# async def websocket_endpoint(websocket: WebSocket, user_id: int):
-#     await websocket.accept()
-
-#     try:
-#         while True:
-#             # Receive data (could be binary frame or text message)
-#             try:
-#                 # Try to receive as bytes first (video frames)
-#                 data = await websocket.receive_bytes()
-
-#                 # Get connection info for additional context
-#                 # conn_info = manager.get_connection_info(user_id)
-#                 # user_id = conn_info.get("user_id")
-
-#                 # Process frame with AI model (include user context if needed)
-#                 detected_text = await process_frame_with_ai(data, user_id=user_id)
-
-#                 # Send result back to client
-#                 response = {
-#                     "type": "detection_result",
-#                     "text": detected_text,
-#                     "user_id": user_id,
-#                     "timestamp": asyncio.get_event_loop().time(),
-#                 }
-
-#                 await manager.send_message(response, websocket)
-
-#             except Exception as recv_error:
-#                 # If not bytes, might be a text message (control message)
-#                 try:
-#                     text_data = await websocket.receive_text()
-#                     control_message = json.loads(text_data)
-
-#                     # Handle control messages (ping, settings, etc.)
-#                     if control_message.get("type") == "ping":
-#                         await manager.send_message({"type": "pong"}, user_id)
-
-#                 except:
-#                     logger.error(
-#                         f"Error processing message from {user_id}: {recv_error}"
-#                     )
-#                     break
-
-#     except WebSocketDisconnect:
-#         manager.disconnect(user_id)
-#     except Exception as e:
-#         logger.error(f"WebSocket error for client {user_id}: {e}")
-#         manager.disconnect(user_id)
-
-
-# Cloud
-
 # Store active WebSocket connections
-# active_connections:list[WebSocket] = []
 active_connections: Dict[int, WebSocket] = {}
 
 
 @sign_to_text_router.websocket("/ws/translate/")
 async def sign_to_text_websocket(
     websocket: WebSocket,
-    # token_data: dict= Depends(AccessTokenBearer()),
     session: Session = Depends(get_session),
 ):
-    # await websocket.accept()
     token_data = await websocket_token_auth(websocket)
     try:
         user_id = token_data["user"]["user_id"]
-    except Exception as e:
+    except Exception:
         await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
         return
     active_connections[user_id] = websocket
-    # active_connections.append(websocket)
     print(active_connections)
 
     try:

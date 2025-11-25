@@ -87,8 +87,17 @@ def run_migrations_offline() -> None:
 async def run_migrations_online() -> None:
     """Run migrations in 'online' mode."""
     # connectable = create_async_engine(settings.DATABASE_URL)
-    connectable = create_async_engine(f"postgresql+asyncpg://{settings.SUPABASE_USER}:{settings.SUPABASE_PASSWORD}@"
-        f"{settings.SUPABASE_HOST}:{settings.SUPABASE_PORT}/{settings.SUPABASE_DB_NAME}")
+    connectable = create_async_engine(
+        f"postgresql+asyncpg://{settings.SUPABASE_USER}:{settings.SUPABASE_PASSWORD}@"
+        f"{settings.SUPABASE_HOST}:{settings.SUPABASE_PORT}/{settings.SUPABASE_DB_NAME}",
+        connect_args={
+            "ssl": "require",
+            "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
+            "server_settings": {"application_name": "sign_language_app"},
+        },
+        execution_options={"prepared_cache_size": 0},
+    )
 
     async with connectable.connect() as connection:
         await connection.run_sync(do_run_migrations)
@@ -103,4 +112,3 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     asyncio.run(run_migrations_online())
-

@@ -26,10 +26,6 @@ class Settings(BaseSettings):
     SUPABASE_HOST: str
     SUPABASE_PORT: int
     SUPABASE_DB_NAME: str
-    REDIS_URL: str = "redis://localhost:6379/0"
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    REDIS_PASSWORD: str
     DB_ECHO_LOG: bool = False
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
@@ -61,8 +57,3 @@ class Settings(BaseSettings):
 
 # print(Path(__name__).resolve().parent / ".env")
 settings = Settings()
-
-
-broker_url = settings.REDIS_URL
-result_backend = settings.REDIS_URL
-broker_connection_retry_on_startup = True

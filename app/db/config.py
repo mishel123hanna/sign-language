@@ -1,57 +1,49 @@
 from contextlib import asynccontextmanager
 from typing import AsyncGenerator
+from uuid import uuid4
 
 from fastapi import FastAPI
-from sqlmodel.ext.asyncio.session import AsyncSession
-
 from sqlalchemy.ext.asyncio import create_async_engine
-import asyncpg
 from sqlalchemy.orm import sessionmaker
+from sqlalchemy.pool import NullPool
 from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.core.settings import settings
 
-# Create async engine with connection pooling
-
-
-# async_engine = create_async_engine(
-#     url=f"postgresql+asyncpg://{settings.SUPABASE_USER}:{settings.SUPABASE_PASSWORD}@"
-#         f"{settings.SUPABASE_HOST}:{settings.SUPABASE_PORT}/{settings.SUPABASE_DB_NAME}",
-#     echo=True,
-#     pool_pre_ping=True,  # Checks connection health
-#     # Reduced pool size since Supabase/PgBouncer handles connection pooling
-#     # pool_size=5,
-#     # max_overflow=5,
-#     connect_args={
-#         "ssl": "require",
-#         "statement_cache_size": 0,  # CRITICAL: Disable prepared statement cache for PgBouncer
-#         "server_settings": {
-#             "application_name": "sign_language_app",
-#         }
-#     }
-# )
-async_engine = create_async_engine(
+DATABASE_URL = (
     f"postgresql+asyncpg://{settings.SUPABASE_USER}:{settings.SUPABASE_PASSWORD}@"
-        f"{settings.SUPABASE_HOST}:{settings.SUPABASE_PORT}/{settings.SUPABASE_DB_NAME}",
-    echo=False,
-    pool_pre_ping=True,
-    pool_size=5,
-    max_overflow=5,
-    connect_args={
-        "ssl": "require",
-        "statement_cache_size": 0,  # مهم جداً مع PgBouncer
-        "server_settings": {
-            "application_name": "sign_language_app",
-        }
-    },
+    f"{settings.SUPABASE_HOST}:{settings.SUPABASE_PORT}/{settings.SUPABASE_DB_NAME}"
 )
 
-    
+async_engine = create_async_engine(
+    DATABASE_URL,
+    echo=False,
+    pool_pre_ping=True,
+    # PgBouncer already does pooling; avoid double pooling
+    poolclass=NullPool,
+    connect_args={
+        "ssl": "require",  # or an ssl.SSLContext if you prefer
+        # Disable asyncpg's statement cache (recommended with PgBouncer)
+        "statement_cache_size": 0,
+        # Disable SQLAlchemy's asyncpg prepared-statement cache
+        "prepared_statement_cache_size": 0,
+        # Make every prepared statement name unique to avoid collisions in PgBouncer
+        "prepared_statement_name_func": lambda: f"__asyncpg_{uuid4()}__",
+        "server_settings": {
+            "application_name": "sign_language_app",
+        },
+    },
+    # you can drop execution_options here; prepared cache is handled via connect_args
+)
 
 
-# Session factory should be created once
+# Session factory
 AsyncSessionLocal = sessionmaker(
-    bind=async_engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+    autoflush=False,
 )
 
 
@@ -62,10 +54,11 @@ async def init_db(app: FastAPI):
         async with async_engine.begin() as conn:
             await conn.run_sync(SQLModel.metadata.create_all)
 
-    yield  # App runs here
-
-    # Cleanup on shutdown
-    await async_engine.dispose()
+    try:
+        yield  # App runs here
+    finally:
+        # Cleanup on shutdown
+        await async_engine.dispose()
 
 
 async def get_session() -> AsyncGenerator[AsyncSession, None]:
@@ -76,6 +69,4 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
-        finally:
-            await session.close()
-
+        # The context manager will close the session for you
