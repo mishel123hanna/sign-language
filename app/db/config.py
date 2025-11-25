@@ -23,7 +23,7 @@ async_engine = create_async_engine(
     # PgBouncer already does pooling; avoid double pooling
     poolclass=NullPool,
     connect_args={
-        "ssl": "require",  # or an ssl.SSLContext if you prefer
+        "ssl": "require",
         # Disable asyncpg's statement cache (recommended with PgBouncer)
         "statement_cache_size": 0,
         # Disable SQLAlchemy's asyncpg prepared-statement cache
@@ -34,7 +34,6 @@ async_engine = create_async_engine(
             "application_name": "sign_language_app",
         },
     },
-    # you can drop execution_options here; prepared cache is handled via connect_args
 )
 
 
@@ -69,4 +68,4 @@ async def get_session() -> AsyncGenerator[AsyncSession, None]:
         except Exception:
             await session.rollback()
             raise
-        # The context manager will close the session for you
+        # The context manager will close the session
