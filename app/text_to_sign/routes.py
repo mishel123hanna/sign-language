@@ -13,6 +13,8 @@ from sqlmodel import Field, SQLModel, select
 from sqlmodel.ext.asyncio.session import AsyncSession
 from tenacity import retry, stop_after_attempt, wait_exponential
 
+from app.ai.client import AIClientError, ai_client, build_text_to_sign_request
+from app.ai.schemas import TokenTiming
 from app.auth.dependencies import AccessTokenBearer
 from app.db.config import async_engine, get_session
 from app.db.models import TranslationHistory
@@ -94,6 +96,16 @@ class TextToSignResponse(SQLModel):
     message: str = Field(default="Video uploaded successfully")
     generation_time_ms: Optional[int] = Field(
         None, description="Time taken to upload video in milliseconds"
+    )
+    ai_request_id: Optional[str] = Field(
+        default=None, description="Correlation id used with the AI service"
+    )
+    tokens: List[TokenTiming] = Field(
+        default_factory=list,
+        description="Ordered list of tokens with confidence and timing",
+    )
+    ai_latency_ms: Optional[int] = Field(
+        default=None, description="Processing time reported by the AI service"
     )
 
 
@@ -206,33 +218,26 @@ async def generate_video_from_text(
     # Rate limiting with semaphore
     async with generation_semaphore:
         try:
-            # Prepare test video with timeout
-            video_path = await asyncio.wait_for(
-                video_gen_service.prepare_test_video(
-                    text=request.text,
-                    language_code=request.language_code,
-                    user_id=user_id,
-                ),
-                timeout=Config.VIDEO_GENERATION_TIMEOUT,
+            ai_request = build_text_to_sign_request(
+                text=request.text,
+                language_code=request.language_code,
+                metadata={"user_id": user_id},
             )
+            ai_result = await ai_client.translate_text_to_sign(ai_request)
 
-            # Generate destination path
+            if not ai_result.video_path or not ai_result.video_path.exists():
+                raise VideoGenerationError("AI did not return a usable video path.")
+
             destination_path = await video_gen_service.generate_video_filename(user_id)
-
-            # Upload to storage
             video_url = await video_gen_service.upload_to_storage(
-                video_path, destination_path
+                ai_result.video_path, destination_path
             )
 
-            # Clean up local temp file
-            if video_path.exists():
-                video_path.unlink(missing_ok=True)
-                logger.info(f"Cleaned up temp file: {video_path}")
+            ai_result.video_path.unlink(missing_ok=True)
+            logger.info(f"Cleaned up temp file: {ai_result.video_path}")
 
-            # Calculate upload time
             upload_time = int((datetime.now() - start_time).total_seconds() * 1000)
 
-            # Log to database in background
             background_tasks.add_task(
                 log_translation_history,
                 user_id=user_id,
@@ -251,12 +256,24 @@ async def generate_video_from_text(
                 video_url=video_url,
                 message="Test video uploaded successfully",
                 generation_time_ms=upload_time,
+                ai_request_id=ai_result.request_id,
+                tokens=ai_result.tokens,
+                ai_latency_ms=ai_result.latency_ms,
             )
 
         except asyncio.TimeoutError:
             raise HTTPException(
                 status_code=status.HTTP_408_REQUEST_TIMEOUT,
                 detail="Video upload timed out. Please try again.",
+            )
+        except AIClientError as e:
+            raise HTTPException(
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail={
+                    "code": e.error.code,
+                    "message": e.error.message,
+                    "details": e.error.details,
+                },
             )
         except (VideoGenerationError, StorageError) as e:
             raise HTTPException(

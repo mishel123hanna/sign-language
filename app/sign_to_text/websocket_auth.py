@@ -20,20 +20,25 @@
 #     return token_data
 
 from fastapi import WebSocket, status
-from fastapi.exceptions import HTTPException
+
 from app.auth.utils import decode_token
 
-async def websocket_token_auth(websocket: WebSocket) -> dict:
+
+async def websocket_token_auth(websocket: WebSocket) -> dict | None:
+    """
+    Validate the Authorization header for a websocket connection.
+    Avoid raising HTTPException inside a websocket flow (it triggers HTTP responses).
+    """
     await websocket.accept()
-    
+
     auth_header = websocket.headers.get("authorization")
     if not auth_header or not auth_header.startswith("Bearer "):
-        await websocket.close(code=1008, reason="Missing token")
-        return
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Missing token")
+        return None
+
     token = auth_header.split(" ")[1]
-    print(token)    
     try:
         return decode_token(token)
-    except HTTPException as e:
-        await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
-        raise  # Prevents further execution
+    except Exception:
+        await websocket.close(code=status.WS_1008_POLICY_VIOLATION, reason="Invalid token")
+        return None
