@@ -199,7 +199,7 @@ async def get_new_access_token(
         )
 
 
-@auth_router.post(  # Changed to POST for better security practices
+@auth_router.post(
     "/logout",
     status_code=status.HTTP_200_OK,
     summary="User logout",
