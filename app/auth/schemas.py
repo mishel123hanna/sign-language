@@ -1,5 +1,5 @@
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from pydantic import BaseModel, EmailStr, Field, field_validator
@@ -234,7 +234,7 @@ class ErrorResponse(BaseModel):
 
     detail: str = Field(description="Error message")
     error_code: Optional[str] = Field(None, description="Specific error code")
-    timestamp: Optional[datetime] = Field(default_factory=datetime.utcnow)
+    timestamp: Optional[datetime] = Field(default_factory=datetime.now(timezone.utc))
 
     class Config:
         """Pydantic configuration."""

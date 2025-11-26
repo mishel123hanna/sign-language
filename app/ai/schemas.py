@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -52,7 +52,7 @@ class SignToTextFramePayload(BaseModel):
     request_id: str
     frame_id: str
     timestamp_ms: int = Field(
-        default_factory=lambda: int(datetime.utcnow().timestamp() * 1000)
+        default_factory=lambda: int(datetime.now(timezone.utc).timestamp() * 1000)
     )
     content_type: str = "image/jpeg"
     metadata: Dict[str, Any] = Field(default_factory=dict)
@@ -70,4 +70,3 @@ class SignToTextStreamChunk(BaseModel):
     transcript: Optional[str] = None
     is_final: bool = False
     timing_info: Dict[str, Any] = Field(default_factory=dict)
-
